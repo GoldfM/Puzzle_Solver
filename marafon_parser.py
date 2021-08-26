@@ -44,8 +44,6 @@ def parse(html):
     cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
     conn.commit()
 
-
-
 def parse_marafon():
     html = requests.get(URL, headers=HEADERS)
     if html.status_code==200:
