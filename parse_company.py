@@ -7,23 +7,14 @@ URL='https://smolensk.jsprav.ru/'
 HEADERS ={'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
           'accept':'*/*'}
 INDEX='https://smolensk.jsprav.ru'
-def get_html(url):
-    req = requests.get(url, headers=HEADERS,params=None)
+def get_html(url,params=None):
+    req = requests.get(url, headers=HEADERS,params=params)
     return req
-dev_id=0
 
 
-conn = sqlite3.connect('../Разные проги/company_smolensk.db')
-cur = conn.cursor()
-cur.execute("""CREATE TABLE IF NOT EXISTS company(
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    time TEXT,
-    address TEXT,
-    site TEXT);
-""")
-conn.commit()
 
+
+list_db=[]
 def get_content(html):
     list_href = []
     soup=bs(html,'html.parser')
@@ -42,17 +33,14 @@ def get_content_2(html):
         list_href2.append(a)
     return list_href2
 
-def get_content_3(html):
-    global dev_id
-    names = []
+def get_content_3(html,url_cur,check):
+    global list_db
     soup=bs(html,'html.parser')
     items=soup.find_all('div',class_='org')
+
     for item in items:
-        dev_id += 1
-        address = ''
-        time_work = ''
-        name=''
-        url=''
+        address = 'Не указано'
+        time_work='Не указано'
         name = item.find('a',class_='lnk')
         url = INDEX + name.attrs['href']
         name = name.text
@@ -65,21 +53,26 @@ def get_content_3(html):
             time_work = item.find('span', class_='time').text
         except:
             pass
-        if address == '':
-            address = 'Не указано'
-        if time_work=='':
-            time_work='Не указано'
-        print(f'{name } ---- {url} ---- {address} --- {time_work}')
-        sqlite_insert_with_param = """INSERT INTO company
-                                      (id, name, time, address, site)
-                                      VALUES (?, ?, ?, ?, ?);"""
-        data_tuple = (dev_id, name, time_work, address, url)
-        cur.execute(sqlite_insert_with_param, data_tuple)
-        conn.commit()
+        #print(f'{name } ---- {url} ---- {address} --- {time_work}')
+        list_db.append([name, time_work, address, url])
+    if check==1:
+        page_bar = soup.find('ul', class_='pagination')
+        page_max = 1
+        if page_bar != None:
+            page_list = [int(a.text) for a in page_bar.find_all('a')]
+            page_max = max(page_list)
+        #print('\n---',page_max,'---\n')
+        if page_max!=1:
+            for page in range(2,page_max+1):
+                html_cur=get_html(url=url_cur,params={'p':page})
+                get_content_3(html_cur.text,url_cur,0)
+    #print(url_cur)
 
-    return names
+
+
 
 def parse_company():
+    global list_db
     html = get_html(URL)
     if html.status_code==200:
         hrefs = get_content(html.text)
@@ -88,8 +81,24 @@ def parse_company():
             hrefs2 = get_content_2(html2.text)
             for href2 in hrefs2:
                 html3=get_html((INDEX + href2))
-                x = get_content_3(html3.text)
-
+                get_content_3(html3.text,INDEX + href2,1)
     else:
         print('Error with website')
-parse_company()
+    conn = sqlite3.connect('company_smolensk.db')
+    cur = conn.cursor()
+    try:
+        cur.execute('DELETE FROM company;', )
+    except:
+        cur.execute("""CREATE TABLE IF NOT EXISTS company(
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                time TEXT,
+                address TEXT,
+                site TEXT);
+                """)
+    cur.executemany("""INSERT INTO company (name, time, address, site) VALUES (?, ?, ?, ?);""", list_db)
+    conn.commit()
+
+
+if __name__ == "__main__":
+    parse_company()

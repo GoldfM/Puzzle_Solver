@@ -12,11 +12,9 @@ def get_content(html):
     soup=bs(html,'html.parser')
     items=soup.find_all('div',class_='news-item')
     for item in items:
-        news={
-            'text':item.find('a',class_='news-visited').text.replace('\xa0',' ').replace('\r',''),
-            'href':item.find('a',class_='news-visited').attrs['href']
-        }
-        print(news)
+        text=item.find('a',class_='news-visited').text.replace('\xa0',' ').replace('\r','')
+        url=item.find('a',class_='news-visited').attrs['href']
+        print(f"---{text}. Ссылка: {url} ---")
 
 
 
@@ -27,4 +25,5 @@ def parse_mail():
 
     else:
         print('Error with website')
-parse_mail()
+if __name__ == "__main__":
+    parse_mail()

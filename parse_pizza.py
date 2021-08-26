@@ -53,7 +53,6 @@ def get_content(html):
         conn.commit()
         id += 1
 
-        print(list_items)
 
     print(len(list_items))
 
@@ -65,4 +64,6 @@ def parse_pizza():
         get_content(html.text)
     else:
         print('Error with website')
-parse_pizza()
+
+if __name__ == "__main__":
+    parse_pizza()
