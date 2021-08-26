@@ -16,45 +16,39 @@ def get_html(url):
 
 
 def get_content(html):
-    conn = sqlite3.connect('pizza.db')
-    cur = conn.cursor()
-    cur.execute("""CREATE TABLE IF NOT EXISTS pizzas(
-        id INT PRIMARY KEY,
-        name TEXT);
-    """)
-    conn.commit()
+    name_list=[]
     soup=bs(html,'html.parser')
-    items=soup.find_all('div',class_='group3')
-
     list_items=[]
-    id=1
+
     for item in soup.find_all('div',class_='group3'):
         name=item.find('span')
         list_items.append(name.text)
-        name=str(name.text)
-        db=(id,name)
-        cur.execute("INSERT INTO pizzas VALUES(?, ?);", db)
-        conn.commit()
-        id += 1
+        name_list.append(name.text)
     for item in soup.find_all('div', class_='group1'):
         name = item.find('span')
         list_items.append(name.text)
-        name = str(name.text)
-        db = (id, name)
-        cur.execute("INSERT INTO pizzas VALUES(?, ?);", db)
-        conn.commit()
-        id += 1
+        name_list.append(name.text)
     for item in soup.find_all('div',class_='group2'):
         name=item.find('span')
         list_items.append(name.text)
-        name = str(name.text)
+        name_list.append(name.text)
+    conn = sqlite3.connect('pizza.db')
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM pizzas")
+    except:
+        cur.execute("""CREATE TABLE IF NOT EXISTS pizzas(
+            id INT PRIMARY KEY,
+            name TEXT);
+        """)
+    conn.commit()
+    print(name_list)
+    id=0
+    for name in name_list:
+        id+=1
         db = (id, name)
         cur.execute("INSERT INTO pizzas VALUES(?, ?);", db)
-        conn.commit()
-        id += 1
-
-
-    print(len(list_items))
+    conn.commit()
 
 
 

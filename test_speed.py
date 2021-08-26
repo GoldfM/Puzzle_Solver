@@ -15,4 +15,6 @@ for i in range(kolvo):
         parse_mail_ru.parse_mail()
     elif parse==4:
         parse_pizza.parse_pizza()
-    print(f"--- {time.time() - start_time} seconds ---")
+    time_list.append(time.time() - start_time)
+print(time_list)
+print(f'--- Average time: {sum(time_list)/len(time_list)} seconds')
