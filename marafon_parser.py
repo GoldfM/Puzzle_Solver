@@ -1,19 +1,13 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import sqlite3
-import time
-start_time = time.time()
-
-
 
 
 HEADERS ={'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
           'accept':'*/*'}
 URL='https://www.marathonbet.ru/su/popular/e-Sports'
-conn = sqlite3.connect('bets.db')
-cur = conn.cursor()
-cur.execute('DELETE FROM all_bets;',)
-conn.commit()
+
+
 
 def get_html(url):
     req = requests.get(url, headers=HEADERS,params=None)
@@ -30,15 +24,30 @@ def parse(html):
         for match in matches:
             commands = match.find('table',class_='member-area-content-table').find_all('span',class_='')
             a,b = commands[0].text.strip(), commands[1].text.strip()
-            koefs = match.find_all('span', class_='selection-link active-selection')
-            k_a = koefs[0].text.strip()
+            koef_blocks = match.find_all('td', class_='height-column-with-price')
+            k_a=koef_blocks[0].find('span').text
             try:
-                k_b = koefs[2].text.strip()
-            except:
-                k_b = koefs[1].text.strip()
+                k_b = koef_blocks[2].find('span').text
+            except Exception as ex:
+                k_b = koef_blocks[1].find('span').text
             match_list.append((game,a,b,k_a,k_b))
-    cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
+    conn = sqlite3.connect('bets.db')
+    cur = conn.cursor()
+    try:
+        cur.execute('DELETE FROM all_bets;', )
+        cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
+    except:
+        cur.execute("""CREATE TABLE IF NOT EXISTS all_bets(
+                id INTEGER PRIMARY KEY,
+                game TEXT,
+                command1 TEXT,
+                command2 TEXT,
+                koef1 TEXT,
+                koef2 TEXT);
+            """)
+        cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
     conn.commit()
+
 
 
 def parse_marafon():
@@ -48,4 +57,3 @@ def parse_marafon():
     else:
         print('Error with website')
 parse_marafon()
-print(f"--- {time.time() - start_time} seconds ---")
