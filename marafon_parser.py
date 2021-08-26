@@ -46,11 +46,11 @@ def parse(html):
 
 
 
-def parse_marafon(url):
-    html = requests.get(url, headers=HEADERS)
+def parse_marafon():
+    html = requests.get(URL, headers=HEADERS)
     if html.status_code==200:
         parse(html.text)
     else:
         print('Error with website')
 if __name__ == "__main__":
-    parse_marafon(URL)
+    parse_marafon()
