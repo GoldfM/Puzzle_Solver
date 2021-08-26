@@ -9,10 +9,6 @@ URL='https://www.marathonbet.ru/su/popular/e-Sports'
 
 
 
-def get_html(url):
-    req = requests.get(url, headers=HEADERS,params=None)
-    return req
-
 
 def parse(html):
     soup=bs(html,'html.parser')
@@ -28,14 +24,14 @@ def parse(html):
             k_a=koef_blocks[0].find('span').text
             try:
                 k_b = koef_blocks[2].find('span').text
-            except Exception as ex:
+            except:
                 k_b = koef_blocks[1].find('span').text
             match_list.append((game,a,b,k_a,k_b))
     conn = sqlite3.connect('bets.db')
     cur = conn.cursor()
     try:
         cur.execute('DELETE FROM all_bets;', )
-        cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
+
     except:
         cur.execute("""CREATE TABLE IF NOT EXISTS all_bets(
                 id INTEGER PRIMARY KEY,
@@ -45,13 +41,13 @@ def parse(html):
                 koef1 TEXT,
                 koef2 TEXT);
             """)
-        cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
+    cur.executemany("""INSERT INTO all_bets (game, command1, command2, koef1, koef2) VALUES (?, ?, ?, ?, ?);""", match_list)
     conn.commit()
 
 
 
 def parse_marafon():
-    html = get_html(URL)
+    html = requests.get(URL, headers=HEADERS)
     if html.status_code==200:
         parse(html.text)
     else:
