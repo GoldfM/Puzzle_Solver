@@ -1,4 +1,6 @@
 from pprint import pprint
+from tkinter import Tk, Label, Button, PhotoImage, ttk, messagebox, Entry, END, Frame
+
 
 
 def find_empty_cell(bord):
@@ -87,6 +89,30 @@ def main():
     print(solve_sudoku(table_2))
     pprint(table_2)
 
+def window():
+    # block_1.place(x=18,y=31,width=25,height=25)
+    window = Tk()
+    window["bg"] = "#362b2b"
+    window.geometry("750x400")
+    window.title("Puzzle Solver")
+    window.resizable(False, False)
+    x=18
+    y=-10
+    for i in range(1,82):
+        if (i-1)%3==0:
+            x+=9
+        if (i-1)%9==0:
+            x=18
+            y+=37
+        if (i-1)%27==0:
+            y+=9
+        obj = Entry(font=("Calibri", 17, "bold"), bg="white", fg="black", justify="center")
+        obj.place(x=x,y=y,width=27,height=27)
+        x+=37
+
+    window.mainloop()
 
 
-main()
+
+
+window()
